@@ -61,6 +61,7 @@ src
 ```
 
 ##  Screenshots
+![App Dashboard Preview](assets/demo-1.png)
 
 ##  Contributing
 To contribute to the Price Alert System, please follow these steps:
