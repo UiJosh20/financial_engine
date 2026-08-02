@@ -32,7 +32,7 @@ To use the Price Alert System, follow these steps:
 2. Create a new price alert by sending a POST request to the `/api/v1/alerts` endpoint
 3. Receive real-time updates and notifications based on the specified conditions
 
-## 📂 Project Structure
+##  Project Structure
 ```
 src
 ├── config
@@ -60,9 +60,9 @@ src
 └── ...
 ```
 
-## 📸 Screenshots
+##  Screenshots
 
-## 🤝 Contributing
+##  Contributing
 To contribute to the Price Alert System, please follow these steps:
 1. Fork the repository using `git fork`
 2. Create a new branch using `git branch`
@@ -70,7 +70,7 @@ To contribute to the Price Alert System, please follow these steps:
 4. Push changes to the remote repository using `git push`
 5. Create a pull request using `git pull-request`
 
-## 📝 License
+##  License
 The Price Alert System is licensed under the MIT License.
 
 ##  Contact
