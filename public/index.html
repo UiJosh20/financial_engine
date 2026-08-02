@@ -44,28 +44,29 @@
       .float-animation { animation: floatSlow 6s ease-in-out infinite; }
     </style>
   </head>
-  <body class="bg-[#f8fafc] text-slate-900 font-sans antialiased selection:bg-blue-100 selection:text-blue-900 min-h-screen flex flex-col bg-[radial-gradient(#e2e8f0_1.2px,transparent_1.2px)] [background-size:24px_24px]">
+  <body class="bg-[#f8fafc] text-slate-900 font-sans antialiased selection:bg-blue-100 selection:text-blue-900 min-h-screen flex flex-col bg-[radial-gradient(#e2e8f0_1.2px,transparent_1.2px)] [background-size:24px_24px] overflow-x-hidden">
 
     <!-- Sticky Header / Navbar -->
     <header class="sticky top-0 z-50 backdrop-blur-xl bg-white/80 border-b border-slate-200/80 transition-all">
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-        <div class="flex items-center gap-3">
-          <div class="w-9 h-9 rounded-xl bg-blue-600 flex items-center justify-center text-white shadow-md shadow-blue-500/25">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path></svg>
+        <div class="flex items-center gap-2.5 sm:gap-3 min-w-0">
+          <div class="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-blue-600 flex items-center justify-center text-white shadow-md shadow-blue-500/25 shrink-0">
+            <svg class="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path></svg>
           </div>
-          <span class="font-bold text-base sm:text-lg tracking-tight text-slate-900">Financial Engine</span>
+          <span class="font-bold text-sm sm:text-lg tracking-tight text-slate-900 truncate">Financial Engine</span>
         </div>
 
         <!-- GitHub Stars Button -->
-        <button id="github-star-btn" onclick="handleStarClick()" class="group flex items-center gap-2 bg-slate-900 hover:bg-slate-800 text-white px-3.5 py-2 rounded-xl text-xs font-semibold shadow-md transition-all cursor-pointer relative">
-          <svg class="w-4 h-4 fill-current" viewBox="0 0 24 24"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
+        <button id="github-star-btn" onclick="handleStarClick()" class="group flex items-center gap-1.5 sm:gap-2 bg-slate-900 hover:bg-slate-800 text-white px-3 sm:px-3.5 py-2 rounded-xl text-xs font-semibold shadow-md transition-all cursor-pointer relative shrink-0">
+          <svg class="w-3.5 h-3.5 sm:w-4 sm:h-4 fill-current" viewBox="0 0 24 24"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
           
-          <svg id="button-star-icon" class="w-4 h-4 text-slate-400 group-hover:text-amber-400 transition-colors" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <svg id="button-star-icon" class="w-3.5 h-3.5 sm:w-4 sm:h-4 text-slate-400 group-hover:text-amber-400 transition-colors" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"/>
           </svg>
 
-          <span>Star on GitHub</span>
-          <span class="bg-slate-800 px-2 py-0.5 rounded-md text-[11px] font-mono text-blue-400 inline-block overflow-hidden h-5">
+          <span class="hidden xs:inline">Star on GitHub</span>
+          <span class="xs:hidden">Star</span>
+          <span class="bg-slate-800 px-1.5 sm:px-2 py-0.5 rounded-md text-[10px] sm:text-[11px] font-mono text-blue-400 inline-block overflow-hidden h-5">
             <span id="repo-stars" class="inline-block">--</span>
           </span>
         </button>
@@ -73,39 +74,39 @@
     </header>
 
     <!-- Main Hero Section -->
-    <main class="flex-1 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-24 flex flex-col items-center text-center">
+    <main class="flex-1 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-20 flex flex-col items-center text-center w-full">
       
       <!-- Badge -->
-      <div class="inline-flex items-center gap-2 bg-blue-50 border border-blue-200 text-blue-700 px-4 py-1.5 rounded-full text-xs font-semibold mb-6 shadow-sm">
-        <svg class="w-4 h-4 text-blue-600 animate-pulse" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
-        Redis-Backed Real-Time Telemetry & Autocannon Tested
+      <div class="inline-flex items-center gap-2 bg-blue-50 border border-blue-200 text-blue-700 px-3.5 sm:px-4 py-1.5 rounded-full text-[11px] sm:text-xs font-semibold mb-5 sm:mb-6 shadow-sm max-w-full text-left">
+        <svg class="w-3.5 h-3.5 sm:w-4 sm:h-4 text-blue-600 animate-pulse shrink-0" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+        <span class="truncate">Redis-Backed Real-Time Telemetry & Autocannon Tested</span>
       </div>
 
       <!-- Headline -->
-      <h1 class="text-4xl sm:text-6xl lg:text-7xl font-extrabold tracking-tight text-slate-900 max-w-4xl leading-[1.1] mb-6">
+      <h1 class="text-3xl sm:text-5xl lg:text-7xl font-extrabold tracking-tight text-slate-900 max-w-4xl leading-[1.12] sm:leading-[1.1] mb-5 sm:mb-6">
         High-Performance <span class="text-blue-600 underline decoration-blue-200 decoration-wavy">Market Surveillance</span> & Price Alerts
       </h1>
 
       <!-- Subtitle -->
-      <p class="text-base sm:text-xl text-slate-600 max-w-2xl mx-auto font-normal leading-relaxed mb-10">
+      <p class="text-sm sm:text-lg lg:text-xl text-slate-600 max-w-2xl mx-auto font-normal leading-relaxed mb-8 sm:mb-10 px-2">
         Process thousands of trade execution events per second with sub-millisecond latency. Built for professional traders who demand instant telemetry.
       </p>
 
-      <!-- Call To Action Buttons -->
-      <div class="flex flex-col sm:flex-row items-center gap-4 w-full justify-center mb-16">
+      <!-- Call To Action Buttons / Pill Box -->
+      <div class="flex flex-col sm:flex-row items-center gap-3.5 w-full max-w-md sm:max-w-lg justify-center mb-10 sm:mb-16 px-2">
         <a href="app.html" class="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white font-semibold px-8 py-3.5 rounded-xl text-sm transition-all shadow-lg shadow-blue-600/30 hover:scale-[1.02] active:scale-95 flex items-center justify-center gap-2">
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+          <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
           Launch App
         </a>
         <a href="#demo" class="w-full sm:w-auto bg-white hover:bg-slate-50 text-slate-800 border border-slate-300 font-semibold px-8 py-3.5 rounded-xl text-sm transition-all shadow-sm hover:scale-[1.02] active:scale-95 flex items-center justify-center gap-2">
-          <svg class="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 13l-3 3m0 0l-3-3m3 3V8m0 13a9 9 0 110-18 9 9 0 010 18z"/></svg>
+          <svg class="w-4 h-4 text-slate-500 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 13l-3 3m0 0l-3-3m3 3V8m0 13a9 9 0 110-18 9 9 0 010 18z"/></svg>
           Watch Demo
         </a>
       </div>
 
       <!-- Video Demo Showcase with Dominant Blue Frame -->
-      <div id="demo" class="w-full max-w-5xl mx-auto rounded-3xl border-2 border-blue-600/30 bg-gradient-to-b from-blue-600 to-blue-700 p-3 sm:p-4 shadow-2xl shadow-blue-600/20 float-animation">
-        <div class="rounded-2xl overflow-hidden bg-slate-950 aspect-video relative shadow-inner">
+      <div id="demo" class="w-full max-w-5xl mx-auto rounded-2xl sm:rounded-3xl border-2 border-blue-600/30 bg-gradient-to-b from-blue-600 to-blue-700 p-2.5 sm:p-4 shadow-2xl shadow-blue-600/20 float-animation">
+        <div class="rounded-xl sm:rounded-2xl overflow-hidden bg-slate-950 aspect-video relative shadow-inner">
           <video autoplay loop muted playsinline class="w-full h-full object-cover">
             <source src="https://res.cloudinary.com/dubaep0qz/video/upload/v1785691793/cursorful-video-1785691733001_rguacl.mp4" type="video/mp4" />
             Your browser does not support the video tag.
@@ -115,46 +116,46 @@
     </main>
 
     <!-- Features Grid Section -->
-    <section id="features" class="py-24 border-t border-slate-200 bg-white/60">
+    <section id="features" class="py-16 sm:py-24 border-t border-slate-200 bg-white/60 w-full">
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="text-center max-w-2xl mx-auto mb-16">
-          <h2 class="text-xs font-bold uppercase tracking-widest text-blue-600 mb-3">Engine Capabilities</h2>
-          <p class="text-3xl sm:text-4xl font-extrabold text-slate-900 tracking-tight">Engineered for Extreme Speed</p>
+        <div class="text-center max-w-2xl mx-auto mb-12 sm:mb-16">
+          <h2 class="text-xs font-bold uppercase tracking-widest text-blue-600 mb-2 sm:mb-3">Engine Capabilities</h2>
+          <p class="text-2xl sm:text-4xl font-extrabold text-slate-900 tracking-tight">Engineered for Extreme Speed</p>
         </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-          <div class="bg-white border border-slate-200/80 p-8 rounded-3xl shadow-lg shadow-slate-200/50 hover:border-blue-500 transition-all">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8">
+          <div class="bg-white border border-slate-200/80 p-6 sm:p-8 rounded-3xl shadow-lg shadow-slate-200/50 hover:border-blue-500 transition-all text-left">
             <div class="w-12 h-12 rounded-2xl bg-blue-50 border border-blue-100 text-blue-600 flex items-center justify-center mb-6">
               <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
             </div>
-            <h3 class="text-lg font-bold text-slate-900 mb-2">Real-Time WebSockets</h3>
-            <p class="text-sm text-slate-600 leading-relaxed">Direct feed integration with zero delay, broadcasting ticks instantly to client dashboards.</p>
+            <h3 class="text-base sm:text-lg font-bold text-slate-900 mb-2">Real-Time WebSockets</h3>
+            <p class="text-xs sm:text-sm text-slate-600 leading-relaxed">Direct feed integration with zero delay, broadcasting ticks instantly to client dashboards.</p>
           </div>
 
-          <div class="bg-white border border-slate-200/80 p-8 rounded-3xl shadow-lg shadow-slate-200/50 hover:border-blue-500 transition-all">
+          <div class="bg-white border border-slate-200/80 p-6 sm:p-8 rounded-3xl shadow-lg shadow-slate-200/50 hover:border-blue-500 transition-all text-left">
             <div class="w-12 h-12 rounded-2xl bg-blue-50 border border-blue-100 text-blue-600 flex items-center justify-center mb-6">
               <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
             </div>
-            <h3 class="text-lg font-bold text-slate-900 mb-2">Redis Memory Caching</h3>
-            <p class="text-sm text-slate-600 leading-relaxed">Lightning-fast lookup tables and event queues ensuring zero dropped orders during spikes.</p>
+            <h3 class="text-base sm:text-lg font-bold text-slate-900 mb-2">Redis Memory Caching</h3>
+            <p class="text-xs sm:text-sm text-slate-600 leading-relaxed">Lightning-fast lookup tables and event queues ensuring zero dropped orders during spikes.</p>
           </div>
 
-          <div class="bg-white border border-slate-200/80 p-8 rounded-3xl shadow-lg shadow-slate-200/50 hover:border-blue-500 transition-all">
+          <div class="bg-white border border-slate-200/80 p-6 sm:p-8 rounded-3xl shadow-lg shadow-slate-200/50 hover:border-blue-500 transition-all text-left">
             <div class="w-12 h-12 rounded-2xl bg-blue-50 border border-blue-100 text-blue-600 flex items-center justify-center mb-6">
               <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
             </div>
-            <h3 class="text-lg font-bold text-slate-900 mb-2">Autocannon Load Tested</h3>
-            <p class="text-sm text-slate-600 leading-relaxed">Rigorously benchmarked under heavy simulated traffic to guarantee production resilience.</p>
+            <h3 class="text-base sm:text-lg font-bold text-slate-900 mb-2">Autocannon Load Tested</h3>
+            <p class="text-xs sm:text-sm text-slate-600 leading-relaxed">Rigorously benchmarked under heavy simulated traffic to guarantee production resilience.</p>
           </div>
         </div>
       </div>
     </section>
 
     <!-- Footer -->
-    <footer class="mt-auto border-t border-slate-200 bg-white py-12 text-center text-xs text-slate-500">
+    <footer class="mt-auto border-t border-slate-200 bg-white py-10 text-center text-xs text-slate-500 w-full">
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-4">
         <div>© <span id="current-year"></span> Financial Engine. Built by Oluwaseun Adeyeri.</div>
-        <div class="flex items-center justify-center gap-6 font-medium text-slate-600">
+        <div class="flex flex-wrap items-center justify-center gap-4 sm:gap-6 font-medium text-slate-600">
           <a href="https://github.com/UiJosh20" target="_blank" class="hover:text-blue-600 transition-colors">GitHub</a>
           <a href="https://www.linkedin.com/in/oluwaseun-adeyeri-199471226" target="_blank" class="hover:text-blue-600 transition-colors">LinkedIn</a>
           <a href="https://x.com/adeyeri_seun" target="_blank" class="hover:text-blue-600 transition-colors">X (Twitter)</a>
