@@ -21,14 +21,14 @@ The Real-Time Market Alert System is a comprehensive application designed to pro
 ## 📦 Installation
 To install the application, follow these steps:
 1. Clone the repository using `git clone`
-2. Install dependencies using `npm install`
+2. Install dependencies using `pnpm install`
 3. Create a PostgreSQL database and update the `config/db.ts` file with the database credentials
 4. Run the `init.sql` script to create the database schema
-5. Start the application using `npm start`
+5. Start the application using `pnpm start`
 
 ## 💻 Usage
 To use the application, follow these steps:
-1. Start the application using `npm start`
+1. Start the application using `pnpm start`
 2. Use a tool like `curl` or a REST client to send requests to the API endpoints
 3. Set up price alerts using the `POST /alerts` endpoint
 4. Receive real-time market data and alerts using the WebSocket connection
