@@ -61,6 +61,7 @@ src
 ```
 
 ##  Screenshots
+![App LandingePage Preview](public/assets/demo-2.png)
 ![App Dashboard Preview](public/assets/demo-1.png)
 
 ##  Contributing
