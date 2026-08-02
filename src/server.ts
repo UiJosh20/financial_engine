@@ -1,17 +1,18 @@
 import express, { Request, Response, NextFunction } from 'express';
 import { createServer } from 'http';
-import { WebSocketServer, WebSocket } from 'ws';
-import { eventQueue } from './queue.js';
-import { pgPool } from './config/db.js';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { eventQueue } from './queue.js';
+import { pgPool } from './config/db.js';
 import { createAlertHandler } from './alerts.js';
+import { startMarketStream } from './services/coinbase.js';
+import { initWebSocketServer, broadcastToClients } from './ws.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 8000;
 
 app.use(express.json());
 
@@ -73,14 +74,19 @@ app.use((err: Error, _req: Request, res: Response, _next: NextFunction) => {
 // ---------------------------------------------------------------------------
 // 2. HELPER: FETCH REAL-TIME STATS
 // ---------------------------------------------------------------------------
-async function getSystemStats() {
+export async function getSystemStats() {
   const waitingCount = await eventQueue.getWaitingCount();
   const activeCount = await eventQueue.getActiveCount();
   const completedCount = await eventQueue.getCompletedCount();
   const failedCount = await eventQueue.getFailedCount();
 
-  const dbResult = await pgPool.query('SELECT COUNT(*) FROM market_events');
-  const totalDbRows = parseInt(dbResult.rows[0].count, 10);
+  let totalDbRows = 0;
+  try {
+    const dbResult = await pgPool.query('SELECT COUNT(*) FROM alert_logs');
+    totalDbRows = parseInt(dbResult.rows[0].count, 10);
+  } catch (err) {
+    // Graceful fallback if alert_logs isn't queried yet
+  }
 
   return {
     timestamp: new Date().toISOString(),
@@ -97,47 +103,27 @@ async function getSystemStats() {
 }
 
 // ---------------------------------------------------------------------------
-// 3. WEBSOCKET SERVER & BROADCAST LOOP
+// 3. SERVER INITIALIZATION
 // ---------------------------------------------------------------------------
 const server = createServer(app);
-const wss = new WebSocketServer({ server });
 
-wss.on('connection', async (ws: WebSocket) => {
-  console.log('🔌 New client connected to WebSockets!');
+// Single WebSocket Server initialization
+initWebSocketServer(server);
 
-  // Send initial state immediately upon connection
-  try {
-    const initialStats = await getSystemStats();
-    ws.send(JSON.stringify(initialStats));
-  } catch (err) {
-    console.error('Failed to send initial WS message:', err);
-  }
-
-  ws.on('close', () => {
-    console.log('🔌 Client disconnected from WebSockets.');
-  });
-});
-
-// Broadcast metrics to all connected WebSocket clients every 500ms
+// Broadcast queue stats every 2 seconds using the ws manager
 setInterval(async () => {
-  if (wss.clients.size === 0) return; // Don't query if no clients are listening
-
   try {
     const stats = await getSystemStats();
-    const payload = JSON.stringify(stats);
-
-    wss.clients.forEach((client) => {
-      if (client.readyState === WebSocket.OPEN) {
-        client.send(payload);
-      }
-    });
+    broadcastToClients({ type: 'STATS', ...stats });
   } catch (err) {
     console.error('Error broadcasting WS stats:', err);
   }
-}, 500);
+}, 2000);
 
 // Start Server
 server.listen(PORT, () => {
   console.log(`⚡ Express API Gateway running on http://localhost:${PORT}`);
-  console.log(`🔌 WebSockets server active on ws://localhost:${PORT}`);
+  console.log(`🔌 WebSockets server active on ws://localhost:${PORT}`); 
+  // Start market stream feed
+  startMarketStream();
 });

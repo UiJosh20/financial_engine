@@ -1,58 +1,56 @@
-import { Queue, Worker } from 'bullmq';
+import { Queue, Worker, Job } from 'bullmq';
 import { Redis } from 'ioredis';
 import { pgPool } from './config/db.js';
 
-const redisConnection = new Redis({
+const connection = new Redis({
   host: 'localhost',
   port: 6379,
-  maxRetriesPerRequest: null,
+  maxRetriesPerRequest: null, // Required by BullMQ
 });
 
-export const eventQueue = new Queue('market-events', {
-  connection: redisConnection,
-});
+// 1. Initialize BullMQ Queue
+export const eventQueue = new Queue('financial-events', { connection });
 
-// 1. Helper function for multi-row parameterized SQL inserts
-async function bulkInsertEvents(jobs: any[]) {
-  if (jobs.length === 0) return;
-
-  const valueClauses: string[] = [];
-  const values: any[] = [];
-
-  jobs.forEach((job, index) => {
-    const { event_type, symbol, price, payload } = job.data;
-    const offset = index * 4;
-
-    valueClauses.push(`($${offset + 1}, $${offset + 2}, $${offset + 3}, $${offset + 4})`);
-    values.push(event_type, symbol, price, JSON.stringify(payload));
-  });
-
-  const queryText = `
-    INSERT INTO market_events (event_type, symbol, price, payload)
-    VALUES ${valueClauses.join(', ')}
-  `;
-
-  await pgPool.query(queryText, values);
+// 2. Define the Job Payload Structure
+export interface TriggeredAlertPayload {
+  alertId: string;
+  symbol: string;
+  triggeredPrice: number;
+  condition: string;
 }
 
-// 2. High-concurrency worker
-export const eventWorker = new Worker(
-  'market-events',
-  async (job) => {
-    // Process job cleanly
-    const { event_type, symbol, price, payload } = job.data;
-    await pgPool.query(
-      `INSERT INTO market_events (event_type, symbol, price, payload) 
-       VALUES ($1, $2, $3, $4)`,
-      [event_type, symbol, price, JSON.stringify(payload)]
-    );
-  },
-  {
-    connection: redisConnection,
-    concurrency: 50, // Increased concurrency to drain Redis much faster
-  }
-);
+// 3. Initialize BullMQ Worker to Process Jobs Asynchronously
+export const alertWorker = new Worker(
+  'financial-events',
+  async (job: Job<TriggeredAlertPayload>) => {
+    const { alertId, symbol, triggeredPrice, condition } = job.data;
+    console.log(`⚙️ [Worker] Processing triggered alert job #${job.id} for alert ${alertId}...`);
 
-eventWorker.on('failed', (job, err) => {
-  console.error(`❌ Job ${job?.id} failed:`, err.message);
-});
+    const client = await pgPool.connect();
+    try {
+      await client.query('BEGIN');
+
+      // Update alert status in PostgreSQL
+      await client.query(
+        `UPDATE price_alerts SET status = 'TRIGGERED' WHERE id = $1`,
+        [alertId]
+      );
+
+      // Insert immutable audit record into alert_logs
+      await client.query(
+        `INSERT INTO alert_logs (alert_id, triggered_price) VALUES ($1, $2)`,
+        [alertId, triggeredPrice]
+      );
+
+      await client.query('COMMIT');
+      console.log(`✅ [Worker] Successfully persisted trigger log to PostgreSQL for alert: ${alertId}`);
+    } catch (error) {
+      await client.query('ROLLBACK');
+      console.error(`❌ [Worker] Failed to process job #${job.id}:`, error);
+      throw error;
+    } finally {
+      client.release();
+    }
+  },
+  { connection }
+);

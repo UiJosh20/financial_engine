@@ -1,0 +1,20 @@
+{
+  "roots": [
+    {
+      "name": "endpoint_test",
+      "path": "endpoint_test"
+    }
+  ],
+  "environments": {
+    "global": [
+      {
+        "key": "baseUrl",
+        "value": "http://localhost:3000",
+        "enabled": true
+      }
+    ],
+    "apis": {
+      "endpoint_test": []
+    }
+  }
+}

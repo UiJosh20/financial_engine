@@ -1,112 +1,452 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Financial Engine - Live System Monitor</title>
-  <style>
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-      background-color: #0f172a;
-      color: #f8fafc;
-      margin: 0;
-      padding: 40px;
-    }
-    h1 {
-      margin-bottom: 8px;
-    }
-    .status-badge {
-      display: inline-block;
-      padding: 4px 12px;
-      border-radius: 12px;
-      font-size: 0.85rem;
-      font-weight: bold;
-      margin-bottom: 24px;
-    }
-    .status-badge.connected { background-color: #059669; color: #ecfdf5; }
-    .status-badge.disconnected { background-color: #dc2626; color: #fef2f2; }
-    
-    .grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-      gap: 20px;
-    }
-    .card {
-      background-color: #1e293b;
-      border: 1px solid #334155;
-      border-radius: 12px;
-      padding: 24px;
-    }
-    .card-title {
-      font-size: 0.85rem;
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-      color: #94a3b8;
-      margin-bottom: 12px;
-    }
-    .card-value {
-      font-size: 2.2rem;
-      font-weight: bold;
-    }
-    .val-waiting { color: #f59e0b; }
-    .val-active { color: #3b82f6; }
-    .val-completed { color: #10b981; }
-    .val-db { color: #a855f7; }
-  </style>
-</head>
-<body>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Financial Engine - Dynamic Terminal</title>
+    <style>
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+        font-family:
+          -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      }
+      body {
+        background-color: #0f172a;
+        color: #f8fafc;
+        padding: 2rem;
+      }
+      h1 {
+        margin-bottom: 0.5rem;
+      }
+      p.subtitle {
+        color: #94a3b8;
+        margin-bottom: 1.5rem;
+      }
 
-  <h1>🚀 Engine Health Monitor</h1>
-  <div id="status" class="status-badge disconnected">Disconnected</div>
+      /* Interactive Alert Creation Form */
+      .form-container {
+        background: #1e293b;
+        border: 1px solid #334155;
+        border-radius: 12px;
+        padding: 1.25rem;
+        margin-bottom: 2rem;
+      }
+      .form-row {
+        display: flex;
+        gap: 1rem;
+        flex-wrap: wrap;
+        align-items: center;
+      }
+      input,
+      select,
+      button {
+        padding: 0.6rem 1rem;
+        border-radius: 6px;
+        border: 1px solid #475569;
+        background: #0f172a;
+        color: #fff;
+        font-size: 0.9rem;
+      }
+      input:focus,
+      select:focus {
+        outline: 2px solid #38bdf8;
+      }
+      button {
+        background: #0284c7;
+        border: none;
+        font-weight: 600;
+        cursor: pointer;
+        transition: background 0.2s;
+      }
+      button:hover {
+        background: #0369a1;
+      }
 
-  <div class="grid">
-    <div class="card">
-      <div class="card-title">Redis Waiting (Backlog)</div>
-      <div id="waiting" class="card-value val-waiting">0</div>
+      /* Flash Banner for Alert Triggers */
+      #alert-banner {
+        display: none;
+        background: #f43f5e;
+        color: #ffffff;
+        padding: 1rem 1.5rem;
+        border-radius: 8px;
+        font-weight: bold;
+        font-size: 1.1rem;
+        margin-bottom: 1.5rem;
+        box-shadow: 0 0 20px rgba(244, 63, 94, 0.6);
+        animation: pulse 1s infinite alternate;
+        justify-content: space-between;
+        align-items: center;
+      }
+
+      @keyframes pulse {
+        from {
+          opacity: 0.8;
+          transform: scale(0.99);
+        }
+        to {
+          opacity: 1;
+          transform: scale(1);
+        }
+      }
+
+      /* Dynamic Price Cards Grid */
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+      }
+      .card {
+        background: #1e293b;
+        border: 1px solid #334155;
+        border-radius: 12px;
+        padding: 1.25rem;
+        transition: border-color 0.3s;
+      }
+      .card.flash {
+        border-color: #f43f5e;
+        box-shadow: 0 0 15px rgba(244, 63, 94, 0.4);
+      }
+      .card-header {
+        font-size: 0.85rem;
+        color: #94a3b8;
+        font-weight: 600;
+        text-transform: uppercase;
+        margin-bottom: 0.5rem;
+      }
+      .card-price {
+        font-size: 1.8rem;
+        font-weight: 700;
+        color: #38bdf8;
+        font-family: monospace;
+      }
+      .card-metric {
+        font-size: 1.8rem;
+        font-weight: 700;
+        color: #34d399;
+        font-family: monospace;
+      }
+      .updated {
+        font-size: 0.75rem;
+        color: #64748b;
+        margin-top: 0.5rem;
+      }
+
+      .logs-container {
+        background: #1e293b;
+        border: 1px solid #334155;
+        border-radius: 12px;
+        padding: 1.5rem;
+      }
+      .log-list {
+        height: 220px;
+        overflow-y: auto;
+        font-family: monospace;
+        font-size: 0.85rem;
+        list-style: none;
+      }
+      .log-item {
+        padding: 0.4rem 0;
+        border-bottom: 1px solid #334155;
+        color: #cbd5e1;
+      }
+      .log-item.alert {
+        color: #f43f5e;
+        font-weight: bold;
+        background: rgba(244, 63, 94, 0.15);
+        padding-left: 0.5rem;
+        border-radius: 4px;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>📈 Financial Engine Terminal</h1>
+    <p class="subtitle">
+      Multi-Symbol Live Binance Market Feed & Redis Speed Matcher
+    </p>
+
+    <!-- Real-Time Trigger Notification Banner -->
+    <div id="alert-banner">
+      <span id="banner-text">🚨 TARGET TRIGGERED!</span>
+      <button onclick="stopAlarm()" style="background: #fff; color: #f43f5e; border: none; padding: 0.4rem 0.9rem; border-radius: 6px; font-weight: bold; cursor: pointer;">🛑 Stop Alarm</button>
     </div>
-    <div class="card">
-      <div class="card-title">Active Workers</div>
-      <div id="active" class="card-value val-active">0</div>
+
+    <!-- Alert Creation Form with Autocomplete -->
+    <div class="form-container">
+      <h3 style="margin-bottom: 0.8rem; font-size: 1rem">
+        ➕ Set Custom Price Target Alert
+      </h3>
+      <form id="alert-form" class="form-row">
+        <input
+          type="text"
+          id="symbol"
+          placeholder="Search Pair (e.g. SOL/USDT)"
+          list="pair-suggestions"
+          required
+          autocomplete="off"
+        />
+
+        <!-- Auto-complete Suggestions List -->
+        <datalist id="pair-suggestions">
+          <option value="BTC/USDT"></option>
+          <option value="ETH/USDT"></option>
+          <option value="SOL/USDT"></option>
+          <option value="BNB/USDT"></option>
+          <option value="XRP/USDT"></option>
+          <option value="ADA/USDT"></option>
+          <option value="DOGE/USDT"></option>
+          <option value="AVAX/USDT"></option>
+          <option value="LINK/USDT"></option>
+          <option value="DOT/USDT"></option>
+          <option value="NEAR/USDT"></option>
+          <option value="PEPE/USDT"></option>
+        </datalist>
+
+        <select id="condition">
+          <option value="ABOVE">ABOVE (>=)</option>
+          <option value="BELOW">BELOW (<=)</option>
+        </select>
+
+        <input
+          type="number"
+          step="any"
+          id="target"
+          placeholder="Target Price ($)"
+          required
+        />
+        <button type="submit">Set Real-Time Alert</button>
+      </form>
     </div>
-    <div class="card">
-      <div class="card-title">Jobs Completed</div>
-      <div id="completed" class="card-value val-completed">0</div>
+
+    <!-- Dynamic Price Grid -->
+    <div id="price-grid" class="grid">
+      <!-- Queue & DB Metrics Cards -->
+      <div class="card">
+        <div class="card-header">Queue Waiting / Active</div>
+        <div id="metric-queue" class="card-metric">0 / 0</div>
+        <div class="updated">BullMQ background worker</div>
+      </div>
+      <div class="card">
+        <div class="card-header">Database Audit Logs</div>
+        <div id="metric-db" class="card-metric">0</div>
+        <div class="updated">PostgreSQL audit records</div>
+      </div>
     </div>
-    <div class="card">
-      <div class="card-title">Postgres Total Rows</div>
-      <div id="dbRows" class="card-value val-db">0</div>
+
+    <!-- Terminal Event Logs -->
+    <div class="logs-container">
+      <div style="margin-bottom: 1rem; font-size: 1.1rem">
+        🚨 Live Activity Stream
+      </div>
+      <ul id="log-list" class="log-list">
+        <li class="log-item">🔌 Connecting to gateway...</li>
+      </ul>
     </div>
-  </div>
 
-  <script>
-    const statusEl = document.getElementById('status');
-    const waitingEl = document.getElementById('waiting');
-    const activeEl = document.getElementById('active');
-    const completedEl = document.getElementById('completed');
-    const dbRowsEl = document.getElementById('dbRows');
+    <script>
+      const ws = new WebSocket(`ws://${window.location.host}`);
+      const priceGrid = document.getElementById("price-grid");
+      const logList = document.getElementById("log-list");
+      const alertBanner = document.getElementById("alert-banner");
+      const bannerText = document.getElementById("banner-text");
 
-    // Connect to WebSockets
-    const ws = new WebSocket(`ws://${window.location.host}`);
+      let audioCtx = null;
+      let alarmInterval = null;
 
-    ws.onopen = () => {
-      statusEl.textContent = 'Live WebSockets Connected';
-      statusEl.className = 'status-badge connected';
-    };
+      // Standardize any user input to uppercase standard pair
+      function normalizeSymbol(rawSymbol) {
+        if (!rawSymbol) return "";
+        let cleaned = rawSymbol.toUpperCase().replace(/[^A-Z0-9]/g, "");
 
-    ws.onmessage = (event) => {
-      const data = JSON.parse(event.data);
-      
-      // Update DOM values in real-time
-      waitingEl.textContent = data.queue.waiting.toLocaleString();
-      activeEl.textContent = data.queue.active.toLocaleString();
-      completedEl.textContent = data.queue.completed.toLocaleString();
-      dbRowsEl.textContent = data.database.totalRows.toLocaleString();
-    };
+        if (cleaned.endsWith("USDT")) {
+          return cleaned;
+        }
+        if (cleaned.endsWith("USD")) {
+          return cleaned.slice(0, -3) + "USDT";
+        }
+        return `${cleaned}USDT`;
+      }
 
-    ws.onclose = () => {
-      statusEl.textContent = 'Disconnected';
-      statusEl.className = 'status-badge disconnected';
-    };
-  </script>
-</body>
+      function cleanId(symbol) {
+        return normalizeSymbol(symbol)
+          .toLowerCase()
+          .replace(/[^a-z0-9]/g, "");
+      }
+
+      function getAudioContext() {
+        if (!audioCtx) {
+          audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        }
+        if (audioCtx.state === "suspended") {
+          audioCtx.resume();
+        }
+        return audioCtx;
+      }
+
+      // Unlock audio context on first user click anywhere
+      window.addEventListener(
+        "click",
+        () => {
+          getAudioContext();
+        },
+        { once: true },
+      );
+
+      function playAlertSound() {
+        try {
+          const ctx = getAudioContext();
+          const playTone = (freq, startTime, duration) => {
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            osc.type = "sine";
+            osc.frequency.setValueAtTime(freq, ctx.currentTime + startTime);
+
+            gain.gain.setValueAtTime(0.3, ctx.currentTime + startTime);
+            gain.gain.exponentialRampToValueAtTime(
+              0.01,
+              ctx.currentTime + startTime + duration,
+            );
+
+            osc.connect(gain);
+            gain.connect(ctx.destination);
+
+            osc.start(ctx.currentTime + startTime);
+            osc.stop(ctx.currentTime + startTime + duration);
+          };
+
+          playTone(587.33, 0, 0.15); // D5 chime
+          playTone(880.0, 0.15, 0.35); // A5 chime
+        } catch (e) {
+          console.warn("Audio play error:", e);
+        }
+      }
+
+      function startContinuousAlarm() {
+        if (alarmInterval) return; // already looping
+        playAlertSound(); // play immediately on trigger
+        alarmInterval = setInterval(() => {
+          playAlertSound();
+        }, 1200); // repeat chime every 1.2 seconds
+      }
+
+      function stopAlarm() {
+        if (alarmInterval) {
+          clearInterval(alarmInterval);
+          alarmInterval = null;
+        }
+        alertBanner.style.display = "none";
+      }
+
+      function addLog(text, isAlert = false) {
+        const li = document.createElement("li");
+        li.className = isAlert ? "log-item alert" : "log-item";
+        li.textContent = `[${new Date().toLocaleTimeString()}] ${text}`;
+        logList.prepend(li);
+        if (logList.children.length > 50)
+          logList.removeChild(logList.lastChild);
+      }
+
+      function getOrCreatePriceCard(rawSymbol) {
+        const symbol = normalizeSymbol(rawSymbol);
+        const sanitized = cleanId(symbol);
+        const cardId = `card-${sanitized}`;
+        let card = document.getElementById(cardId);
+
+        if (!card) {
+          card = document.createElement("div");
+          card.id = cardId;
+          card.className = "card";
+          card.innerHTML = `
+          <div class="card-header">${symbol}</div>
+          <div id="price-${cardId}" class="card-price">Syncing...</div>
+          <div id="time-${cardId}" class="updated">Streaming from Binance Feed</div>
+        `;
+          priceGrid.prepend(card);
+        }
+        return card;
+      }
+
+      ws.onmessage = (event) => {
+        const data = JSON.parse(event.data);
+
+        if (data.type === "TICKER") {
+          const symbol = normalizeSymbol(data.symbol);
+          const card = getOrCreatePriceCard(symbol);
+          const cardId = card.id;
+
+          const priceEl = document.getElementById(`price-${cardId}`);
+          const timeEl = document.getElementById(`time-${cardId}`);
+
+          if (priceEl) {
+            priceEl.textContent = `$${data.price.toLocaleString(undefined, { minimumFractionDigits: 2 })}`;
+            timeEl.textContent = `Last tick: ${new Date(data.timestamp).toLocaleTimeString()}`;
+          }
+        } else if (data.type === "STATS") {
+          document.getElementById("metric-queue").textContent =
+            `${data.queue.waiting} / ${data.queue.active}`;
+          document.getElementById("metric-db").textContent =
+            data.database.totalRows.toLocaleString();
+        } else if (data.type === "ALERT_TRIGGERED") {
+          const symbol = normalizeSymbol(data.symbol);
+          const msg = `🚨 TARGET MATCH! ${symbol} crossed target at $${data.price} (${data.condition})`;
+          addLog(msg, true);
+
+          // 1. Start continuous repeating audio loop & display interactive banner
+          bannerText.textContent = msg;
+          alertBanner.style.display = "flex";
+          startContinuousAlarm();
+
+          // 2. Highlight card
+          const card = document.getElementById(`card-${cleanId(symbol)}`);
+          if (card) {
+            card.classList.add("flash");
+            setTimeout(() => card.classList.remove("flash"), 3000);
+          }
+        }
+      };
+
+      // Form submission handler
+      document
+        .getElementById("alert-form")
+        .addEventListener("submit", async (e) => {
+          e.preventDefault();
+          const rawSymbol = document.getElementById("symbol").value.trim();
+          const symbol = normalizeSymbol(rawSymbol);
+          const condition = document.getElementById("condition").value;
+          const target_price = parseFloat(
+            document.getElementById("target").value,
+          );
+
+          getOrCreatePriceCard(symbol);
+
+          try {
+            const res = await fetch("/api/v1/alerts", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                user_id: "89ae8025-b96b-4e15-b931-ddcabc6b0804",
+                symbol,
+                condition,
+                target_price,
+              }),
+            });
+
+            if (res.ok) {
+              addLog(
+                `📌 Created alert for ${symbol} ${condition} $${target_price}`,
+              );
+              document.getElementById("symbol").value = "";
+              document.getElementById("target").value = "";
+            }
+          } catch (err) {
+            addLog(`❌ Failed to create alert: ${err.message}`);
+          }
+        });
+
+      ws.onopen = () => addLog("✅ Connected to backend WebSocket gateway");
+      ws.onclose = () => addLog("⚠️ Disconnected from server");
+    </script>
+  </body>
 </html>

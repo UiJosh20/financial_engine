@@ -27,6 +27,9 @@ importers:
         specifier: ^8.21.1
         version: 8.21.1
     devDependencies:
+      '@types/autocannon':
+        specifier: ^7.12.7
+        version: 7.12.7
       '@types/express':
         specifier: ^5.0.6
         version: 5.0.6
@@ -249,6 +252,9 @@ packages:
     resolution: {integrity: sha512-CmCXPQrkbwExx3j946/PtHWHbYJiCRBRDl4BlkRQcJB/YOwQxJRTpoo7aTsortjgoJ1x7opzTSxn7C+ASSLVjQ==}
     cpu: [x64]
     os: [win32]
+
+  '@types/autocannon@7.12.7':
+    resolution: {integrity: sha512-Pd4nPf7wRpacULa6D/EC9x3CwzFQXwA0z5WFuik/fvJjW44V3WzBTM3jtt8nSBoflUNgswPiMCtgrr1bwnAcMg==}
 
   '@types/body-parser@1.19.6':
     resolution: {integrity: sha512-HLFeCYgz89uk22N5Qg3dvGvsv46B8GLvKKo1zKG4NybA8U2DiEO3w9lqGg29t/tfLRJpJ6iQxnVw4OnB7MoM9g==}
@@ -1104,6 +1110,10 @@ snapshots:
 
   '@msgpackr-extract/msgpackr-extract-win32-x64@3.0.4':
     optional: true
+
+  '@types/autocannon@7.12.7':
+    dependencies:
+      '@types/node': 26.1.2
 
   '@types/body-parser@1.19.6':
     dependencies:
