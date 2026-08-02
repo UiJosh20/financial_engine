@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Financial Engine - Live System Monitor</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background-color: #0f172a;
+      color: #f8fafc;
+      margin: 0;
+      padding: 40px;
+    }
+    h1 {
+      margin-bottom: 8px;
+    }
+    .status-badge {
+      display: inline-block;
+      padding: 4px 12px;
+      border-radius: 12px;
+      font-size: 0.85rem;
+      font-weight: bold;
+      margin-bottom: 24px;
+    }
+    .status-badge.connected { background-color: #059669; color: #ecfdf5; }
+    .status-badge.disconnected { background-color: #dc2626; color: #fef2f2; }
+    
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 20px;
+    }
+    .card {
+      background-color: #1e293b;
+      border: 1px solid #334155;
+      border-radius: 12px;
+      padding: 24px;
+    }
+    .card-title {
+      font-size: 0.85rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: #94a3b8;
+      margin-bottom: 12px;
+    }
+    .card-value {
+      font-size: 2.2rem;
+      font-weight: bold;
+    }
+    .val-waiting { color: #f59e0b; }
+    .val-active { color: #3b82f6; }
+    .val-completed { color: #10b981; }
+    .val-db { color: #a855f7; }
+  </style>
+</head>
+<body>
+
+  <h1>🚀 Engine Health Monitor</h1>
+  <div id="status" class="status-badge disconnected">Disconnected</div>
+
+  <div class="grid">
+    <div class="card">
+      <div class="card-title">Redis Waiting (Backlog)</div>
+      <div id="waiting" class="card-value val-waiting">0</div>
+    </div>
+    <div class="card">
+      <div class="card-title">Active Workers</div>
+      <div id="active" class="card-value val-active">0</div>
+    </div>
+    <div class="card">
+      <div class="card-title">Jobs Completed</div>
+      <div id="completed" class="card-value val-completed">0</div>
+    </div>
+    <div class="card">
+      <div class="card-title">Postgres Total Rows</div>
+      <div id="dbRows" class="card-value val-db">0</div>
+    </div>
+  </div>
+
+  <script>
+    const statusEl = document.getElementById('status');
+    const waitingEl = document.getElementById('waiting');
+    const activeEl = document.getElementById('active');
+    const completedEl = document.getElementById('completed');
+    const dbRowsEl = document.getElementById('dbRows');
+
+    // Connect to WebSockets
+    const ws = new WebSocket(`ws://${window.location.host}`);
+
+    ws.onopen = () => {
+      statusEl.textContent = 'Live WebSockets Connected';
+      statusEl.className = 'status-badge connected';
+    };
+
+    ws.onmessage = (event) => {
+      const data = JSON.parse(event.data);
+      
+      // Update DOM values in real-time
+      waitingEl.textContent = data.queue.waiting.toLocaleString();
+      activeEl.textContent = data.queue.active.toLocaleString();
+      completedEl.textContent = data.queue.completed.toLocaleString();
+      dbRowsEl.textContent = data.database.totalRows.toLocaleString();
+    };
+
+    ws.onclose = () => {
+      statusEl.textContent = 'Disconnected';
+      statusEl.className = 'status-badge disconnected';
+    };
+  </script>
+</body>
+</html>
