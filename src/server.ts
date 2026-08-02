@@ -3,8 +3,8 @@ import { createServer } from 'http';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { eventQueue } from './queue.js';
-import { pgPool } from './config/db.js';
-import { createAlertHandler } from './alerts.js';
+import { initializeDatabase, pgPool } from './config/db.js';
+import apiRouter from './routes/api.js';
 import { startMarketStream } from './services/coinbase.js';
 import { initWebSocketServer, broadcastToClients } from './ws.js';
 
@@ -16,11 +16,8 @@ const PORT = process.env.PORT || 8000;
 
 app.use(express.json());
 
-// ---------------------------------------------------------------------------
-// 1. HTTP ENDPOINTS
-// ---------------------------------------------------------------------------
-
-app.post('/api/v1/alerts', createAlertHandler);
+// Mount API routes
+app.use('/api/v1', apiRouter);
 
 app.post('/api/v1/events', async (req: Request, res: Response, next: NextFunction) => {
   try {
@@ -59,10 +56,8 @@ app.get('/api/v1/events/stats', async (_req: Request, res: Response, next: NextF
   }
 });
 
-// Serve frontend static files
 app.use(express.static(path.join(__dirname, '../public')));
 
-// Global Error Handler
 app.use((err: Error, _req: Request, res: Response, _next: NextFunction) => {
   console.error('❌ Global Server Error:', err.stack);
   res.status(500).json({
@@ -71,9 +66,6 @@ app.use((err: Error, _req: Request, res: Response, _next: NextFunction) => {
   });
 });
 
-// ---------------------------------------------------------------------------
-// 2. HELPER: FETCH REAL-TIME STATS
-// ---------------------------------------------------------------------------
 export async function getSystemStats() {
   const waitingCount = await eventQueue.getWaitingCount();
   const activeCount = await eventQueue.getActiveCount();
@@ -82,10 +74,10 @@ export async function getSystemStats() {
 
   let totalDbRows = 0;
   try {
-    const dbResult = await pgPool.query('SELECT COUNT(*) FROM alert_logs');
+    const dbResult = await pgPool.query('SELECT COUNT(*) FROM price_alerts');
     totalDbRows = parseInt(dbResult.rows[0].count, 10);
   } catch (err) {
-    // Graceful fallback if alert_logs isn't queried yet
+    // Graceful fallback
   }
 
   return {
@@ -102,15 +94,13 @@ export async function getSystemStats() {
   };
 }
 
-// ---------------------------------------------------------------------------
-// 3. SERVER INITIALIZATION
-// ---------------------------------------------------------------------------
 const server = createServer(app);
 
-// Single WebSocket Server initialization
 initWebSocketServer(server);
+await initializeDatabase();
 
-// Broadcast queue stats every 2 seconds using the ws manager
+
+
 setInterval(async () => {
   try {
     const stats = await getSystemStats();
@@ -120,10 +110,8 @@ setInterval(async () => {
   }
 }, 2000);
 
-// Start Server
 server.listen(PORT, () => {
   console.log(`⚡ Express API Gateway running on http://localhost:${PORT}`);
-  console.log(`🔌 WebSockets server active on ws://localhost:${PORT}`); 
-  // Start market stream feed
+  console.log(`🔌 WebSockets server active on ws://localhost:${PORT}`);
   startMarketStream();
 });

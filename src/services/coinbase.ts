@@ -2,31 +2,30 @@ import WebSocket from 'ws';
 import { Redis } from 'ioredis';
 import { eventQueue } from '../queue.js';
 import { broadcastToClients } from '../ws.js';
+import { pgPool } from '../config/db.js';
 
-const redis = new Redis({ host: 'localhost', port: 6379 });
+const redis = new Redis({ host: process.env.REDIS_HOST || 'localhost', port: Number(process.env.REDIS_PORT) || 6379 });
 const BINANCE_WS_URL = 'wss://stream.binance.com:9443/ws';
 
 let ws: WebSocket | null = null;
 const activeSymbols = new Set<string>(['btcusdt', 'ethusdt', 'solusdt', 'ltcusdt']);
 
-/**
- * Normalizes input like "BTC-USD", "btc/usd", or "solusdt" to lowercase Binance format "btcusdt"
- */
-export function normalizeSymbol(rawSymbol:any) {
+export function normalizeSymbol(rawSymbol: any): string {
   if (!rawSymbol) return "";
   let cleaned = rawSymbol.toUpperCase().replace(/[^A-Z0-9]/g, "");
 
   if (cleaned.endsWith("USDT")) {
-    return cleaned;
+    return `${cleaned.slice(0, -4)}/USDT`;
   }
   if (cleaned.endsWith("USD")) {
-    return cleaned.slice(0, -3) + "USDT";
+    return `${cleaned.slice(0, -3)}/USDT`;
   }
-  return `${cleaned}USDT`;
+  return `${cleaned}/USDT`;
 }
 
 export function subscribeToSymbol(rawSymbol: string) {
-  const streamSymbol = normalizeSymbol(rawSymbol);
+  const formatted = normalizeSymbol(rawSymbol);
+  const streamSymbol = formatted.replace('/', '').toLowerCase();
 
   if (activeSymbols.has(streamSymbol)) return;
   activeSymbols.add(streamSymbol);
@@ -47,7 +46,6 @@ export function startMarketStream() {
 
   ws.on('open', () => {
     console.log('📡 Connected to Binance Public Stream!');
-
     const streams = Array.from(activeSymbols).map((s) => `${s}@ticker`);
     const payload = {
       method: 'SUBSCRIBE',
@@ -60,16 +58,12 @@ export function startMarketStream() {
   ws.on('message', async (rawData: WebSocket.RawData) => {
     try {
       const data = JSON.parse(rawData.toString());
-
-      // Binance Ticker event "24hrTicker"
       if (data.e === '24hrTicker' && data.c) {
         const rawSymbol = data.s; // e.g. "BTCUSDT"
-        const currentPrice = parseFloat(data.c); // Last price
-        
-        // Convert to UI display format e.g. "BTC/USDT"
-        const formattedSymbol = `${rawSymbol.replace('USDT', '')}/USDT`;
+        const currentPrice = parseFloat(data.c);
+        const displaySymbol = `${rawSymbol.replace('USDT', '')}/USDT`;
 
-        await evaluateAlerts(formattedSymbol, rawSymbol, currentPrice);
+        await evaluateAlertsWithRearm(displaySymbol, rawSymbol, currentPrice);
       }
     } catch (err) {
       console.error('❌ Binance WS Parse Error:', err);
@@ -86,11 +80,7 @@ export function startMarketStream() {
   });
 }
 
-async function evaluateAlerts(displaySymbol: string, rawSymbol: string, price: number) {
-  // Key format for Redis: "alerts:ABOVE:BTCUSDT"
-  const redisSymbol = rawSymbol.toUpperCase();
-
-  // Broadcast to Web Dashboard
+async function evaluateAlertsWithRearm(displaySymbol: string, redisSymbol: string, price: number) {
   broadcastToClients({
     type: 'TICKER',
     symbol: displaySymbol,
@@ -98,27 +88,44 @@ async function evaluateAlerts(displaySymbol: string, rawSymbol: string, price: n
     timestamp: new Date().toISOString(),
   });
 
-  // 1. Check ABOVE alerts
   const aboveKey = `alerts:ABOVE:${redisSymbol}`;
-  const triggeredAbove = await redis.zrangebyscore(aboveKey, 0, price);
+  const belowKey = `alerts:BELOW:${redisSymbol}`;
 
-  if (triggeredAbove.length > 0) {
-    await redis.zrem(aboveKey, ...triggeredAbove);
-    for (const alertId of triggeredAbove) {
+  // 1. Evaluate ABOVE alerts & Re-arm logic
+  const candidateAboves = await redis.zrange(aboveKey, '0', '-1', 'WITHSCORES');
+  for (let i = 0; i < candidateAboves.length; i += 2) {
+    const alertId = candidateAboves[i];
+    const targetPrice = parseFloat(candidateAboves[i + 1]);
+    const dbRes = await pgPool.query('SELECT is_triggered, user_id FROM price_alerts WHERE id = $1', [alertId]);
+    if (dbRes.rows.length === 0) continue;
+    const { is_triggered, user_id } = dbRes.rows[0];
+
+    if (price >= targetPrice && !is_triggered) {
+      await pgPool.query('UPDATE price_alerts SET is_triggered = true, status = $1 WHERE id = $2', ['TRIGGERED', alertId]);
       await eventQueue.add('PROCESS_TRIGGER', { alertId, symbol: displaySymbol, triggeredPrice: price, condition: 'ABOVE' });
+      broadcastToClients({ type: 'ALERT_TRIGGERED', user_id, condition: 'ABOVE', symbol: displaySymbol, price, alertId });
+    } else if (price < targetPrice && is_triggered) {
+      // Re-arm when price drops back down below target
+      await pgPool.query('UPDATE price_alerts SET is_triggered = false, status = $1 WHERE id = $2', ['ACTIVE', alertId]);
     }
-    broadcastToClients({ type: 'ALERT_TRIGGERED', condition: 'ABOVE', symbol: displaySymbol, price, alertIds: triggeredAbove });
   }
 
-  // 2. Check BELOW alerts
-  const belowKey = `alerts:BELOW:${redisSymbol}`;
-  const triggeredBelow = await redis.zrangebyscore(belowKey, price, '+inf');
+  // 2. Evaluate BELOW alerts & Re-arm logic
+  const candidateBelows = await redis.zrange(belowKey, '0', '-1', 'WITHSCORES');
+  for (let i = 0; i < candidateBelows.length; i += 2) {
+    const alertId = candidateBelows[i];
+    const targetPrice = parseFloat(candidateBelows[i + 1]);
+    const dbRes = await pgPool.query('SELECT is_triggered, user_id FROM price_alerts WHERE id = $1', [alertId]);
+    if (dbRes.rows.length === 0) continue;
+    const { is_triggered, user_id } = dbRes.rows[0];
 
-  if (triggeredBelow.length > 0) {
-    await redis.zrem(belowKey, ...triggeredBelow);
-    for (const alertId of triggeredBelow) {
+    if (price <= targetPrice && !is_triggered) {
+      await pgPool.query('UPDATE price_alerts SET is_triggered = true, status = $1 WHERE id = $2', ['TRIGGERED', alertId]);
       await eventQueue.add('PROCESS_TRIGGER', { alertId, symbol: displaySymbol, triggeredPrice: price, condition: 'BELOW' });
+      broadcastToClients({ type: 'ALERT_TRIGGERED', user_id, condition: 'BELOW', symbol: displaySymbol, price, alertId });
+    } else if (price > targetPrice && is_triggered) {
+      // Re-arm when price rises back up above target
+      await pgPool.query('UPDATE price_alerts SET is_triggered = false, status = $1 WHERE id = $2', ['ACTIVE', alertId]);
     }
-    broadcastToClients({ type: 'ALERT_TRIGGERED', condition: 'BELOW', symbol: displaySymbol, price, alertIds: triggeredBelow });
   }
 }

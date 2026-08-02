@@ -3,8 +3,8 @@ import { Redis } from 'ioredis';
 import { pgPool } from './config/db.js';
 
 const connection = new Redis({
-  host: 'localhost',
-  port: 6379,
+ host: process.env.REDIS_HOST || 'localhost',
+  port: Number(process.env.REDIS_PORT) || 6379,
   maxRetriesPerRequest: null, // Required by BullMQ
 });
 
