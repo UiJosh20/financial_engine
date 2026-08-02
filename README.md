@@ -74,4 +74,4 @@ To contribute to the Price Alert System, please follow these steps:
 The Price Alert System is licensed under the MIT License.
 
 ##  Contact
-For any questions or concerns, please contact us at [adeyeriseun0@gmail.com](mailto:adeyeriseun0@gmail.com).
+For any questions or concerns, please contact us at [adeyeriseun0@gmail.com](adeyeriseun0@gmail.com).
