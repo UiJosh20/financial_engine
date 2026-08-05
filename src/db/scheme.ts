@@ -1,5 +1,6 @@
 import { pgPool } from "../config/db.js";
 
+
 export async function createSchema() {
     const query =`
     CREATE TABLE IF NOT EXISTS market_events(
