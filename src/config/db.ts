@@ -12,8 +12,13 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const isTestEnv = process.env.NODE_ENV === 'test';
 
-export const pgPool = new Pool({
-   connectionString: process.env.DATABASE_URL || 'postgresql://postgres_user:postgres_password@localhost:5432/financial_db',
+export const pgPool = isTestEnv ? new Pool({
+  connectionString:  'postgresql://postgres_user:postgres_password@localhost:5432/financial_db',
+  max: 10,
+  idleTimeoutMillis: 30000,
+  connectionTimeoutMillis: 30000,
+}) : new Pool({
+   connectionString:  process.env.DATABASE_URL,
     max: 10,
     idleTimeoutMillis: 30000,
     connectionTimeoutMillis: 30000,
