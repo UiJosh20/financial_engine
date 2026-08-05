@@ -16,9 +16,9 @@ const PORT = process.env.PORT ? parseInt(process.env.PORT, 10) : 8000;
 
 app.use(express.json());
 
-app.get('/', (req, res) => {
-  res.status(200).json({ status: 'ok', message: 'Financial Engine API is running' });
-});
+// app.get('/', (req, res) => {
+//   res.status(200).json({ status: 'ok', message: 'Financial Engine API is running' });
+// });
 
 // Mount API routes
 app.use('/api/v1', apiRouter);
