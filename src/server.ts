@@ -100,20 +100,36 @@ export async function getSystemStats() {
 
 const server = createServer(app);
 
-
-
 initWebSocketServer(server);
 
+// Start listening FIRST so the platform's health check / proxy probe
+// can succeed even if downstream services are still coming up.
 server.listen(PORT, '0.0.0.0', () => {
   console.log(`⚡ Express API Gateway running on http://localhost:${PORT}`);
   console.log(`🔌 WebSockets server active on ws://localhost:${PORT}`);
   startMarketStream();
 });
 
+// DB init happens after the server is already listening, and a failure
+// here must NOT crash the whole app — it only disables DB-backed features.
+try {
+  await initializeDatabase();
+} catch (err) {
+  console.error('❌ DB initialization failed — server will keep running without it:', err);
+}
 
-await initializeDatabase();
+// Process-level safety nets: never let an unhandled error/rejection
+// silently kill a running server after it's already passed health checks.
+process.on('unhandledRejection', (reason) => {
+  console.error('❌ Unhandled Rejection:', reason);
+});
 
-
+process.on('uncaughtException', (err) => {
+  console.error('❌ Uncaught Exception:', err);
+  // Not calling process.exit() here on purpose — log and stay alive.
+  // If you'd rather fail loudly and let the platform restart you,
+  // replace this with a controlled process.exit(1).
+});
 
 setInterval(async () => {
   try {
@@ -123,4 +139,3 @@ setInterval(async () => {
     console.error('Error broadcasting WS stats:', err);
   }
 }, 2000);
-
