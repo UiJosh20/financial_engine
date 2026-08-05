@@ -41,6 +41,27 @@
         },
       };
     </script>
+    <style>
+      /* Loading spinner animation */
+      @keyframes spin {
+        to { transform: rotate(360deg); }
+      }
+      .loading-spinner {
+        display: inline-block;
+        width: 1em;
+        height: 1em;
+        border: 2px solid currentColor;
+        border-right-color: transparent;
+        border-radius: 50%;
+        animation: spin 0.6s linear infinite;
+        vertical-align: middle;
+        margin-right: 0.5em;
+      }
+      .btn-loading {
+        pointer-events: none;
+        opacity: 0.7;
+      }
+    </style>
   </head>
   <body
     class="bg-slate-50 text-foreground min-h-screen antialiased text-sm p-3 sm:p-6"
@@ -86,6 +107,7 @@
           >TARGET TRIGGERED!</span
         >
         <button
+          id="acknowledge-btn"
           onclick="stopAlarm()"
           class="bg-white text-destructive px-4 py-2 rounded-lg font-bold text-xs sm:text-sm hover:bg-slate-100 transition-colors w-full sm:w-auto text-center"
         >
@@ -398,6 +420,7 @@
             Cancel
           </button>
           <button
+            id="confirm-delete-btn"
             onclick="executeDelete()"
             class="px-4 py-2 text-xs font-semibold text-white bg-rose-600 hover:bg-rose-700 rounded-lg transition-colors shadow-sm"
           >
@@ -426,6 +449,24 @@
       let searchQuery = "";
       let editingAlertId = null;
       let alertIdPendingDelete = null;
+
+      // Loading state helper functions
+      function setButtonLoading(button, loadingText = "Loading...") {
+        const originalText = button.getAttribute('data-original-text') || button.textContent;
+        button.setAttribute('data-original-text', originalText);
+        button.classList.add('btn-loading');
+        button.innerHTML = `<span class="loading-spinner"></span>${loadingText}`;
+        button.disabled = true;
+      }
+
+      function resetButton(button) {
+        const originalText = button.getAttribute('data-original-text');
+        button.classList.remove('btn-loading');
+        if (originalText) {
+          button.textContent = originalText;
+        }
+        button.disabled = false;
+      }
 
       const assetCategories = {
         POPULAR: [
@@ -566,14 +607,21 @@
       }
 
       function filterCategory(category) {
-        currentCategory = category;
-        document.querySelectorAll(".cat-tab").forEach((tab) => {
-          tab.className =
-            "cat-tab px-3 py-1.5 rounded-md text-xs font-medium text-slate-600 hover:bg-slate-100 whitespace-nowrap transition-colors";
-        });
-        event.target.className =
-          "cat-tab px-3 py-1.5 rounded-md text-xs font-semibold bg-blue-600 text-white whitespace-nowrap transition-colors";
-        renderWatchlist();
+        const clickedButton = event.target;
+        setButtonLoading(clickedButton, "Loading...");
+        
+        // Simulate loading delay for category switch
+        setTimeout(() => {
+          currentCategory = category;
+          document.querySelectorAll(".cat-tab").forEach((tab) => {
+            tab.className =
+              "cat-tab px-3 py-1.5 rounded-md text-xs font-medium text-slate-600 hover:bg-slate-100 whitespace-nowrap transition-colors";
+          });
+          clickedButton.className =
+            "cat-tab px-3 py-1.5 rounded-md text-xs font-semibold bg-blue-600 text-white whitespace-nowrap transition-colors";
+          renderWatchlist();
+          resetButton(clickedButton);
+        }, 300);
       }
 
       document
@@ -753,11 +801,17 @@
       }
 
       function stopAlarm() {
-        if (alarmInterval) {
-          clearInterval(alarmInterval);
-          alarmInterval = null;
-        }
-        document.getElementById("alert-banner").style.display = "none";
+        const acknowledgeBtn = document.getElementById("acknowledge-btn");
+        setButtonLoading(acknowledgeBtn, "Acknowledging...");
+        
+        setTimeout(() => {
+          if (alarmInterval) {
+            clearInterval(alarmInterval);
+            alarmInterval = null;
+          }
+          document.getElementById("alert-banner").style.display = "none";
+          resetButton(acknowledgeBtn);
+        }, 500);
       }
 
       function addLog(text, isAlert = false) {
@@ -808,8 +862,8 @@
               <div class="flex justify-between items-center pt-1">
                 <span class="text-[11px] font-semibold ${a.is_triggered ? "text-destructive" : "text-emerald-600"}">● ${a.is_triggered ? "TRIGGERED" : "ACTIVE"}</span>
                 <div class="flex items-center gap-1.5">
-                  <button onclick="startEdit('${a.id}', '${a.symbol}', '${a.condition}', ${a.target_price})" class="px-2.5 py-1 text-xs font-medium text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-lg border border-blue-100 transition-colors">Edit</button>
-                  <button onclick="promptDelete('${a.id}')" class="px-2.5 py-1 text-xs font-medium text-rose-600 bg-rose-50 hover:bg-rose-100 rounded-lg border border-rose-100 transition-colors">Delete</button>
+                  <button onclick="startEdit('${a.id}', '${a.symbol}', '${a.condition}', ${a.target_price})" class="edit-alert-btn px-2.5 py-1 text-xs font-medium text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-lg border border-blue-100 transition-colors">Edit</button>
+                  <button onclick="promptDelete('${a.id}')" class="delete-alert-btn px-2.5 py-1 text-xs font-medium text-rose-600 bg-rose-50 hover:bg-rose-100 rounded-lg border border-rose-100 transition-colors">Delete</button>
                 </div>
               </div>
             </div>
@@ -826,8 +880,8 @@
               <td class="py-3 px-3 font-mono font-medium">${formatAssetPrice(a.symbol, a.target_price)}</td>
               <td class="py-3 px-3"><span class="font-medium ${a.is_triggered ? "text-destructive font-bold" : "text-emerald-600"}">${a.is_triggered ? "TRIGGERED" : "ACTIVE"}</span></td>
               <td class="py-3 px-3 text-right space-x-2">
-                <button onclick="startEdit('${a.id}', '${a.symbol}', '${a.condition}', ${a.target_price})" class="text-xs border border-blue-200 text-blue-600 hover:bg-blue-50 px-2.5 py-1 rounded transition-colors font-medium">Edit</button>
-                <button onclick="promptDelete('${a.id}')" class="text-xs border border-rose-200 text-rose-600 hover:bg-rose-50 px-2.5 py-1 rounded transition-colors font-medium">Delete</button>
+                <button onclick="startEdit('${a.id}', '${a.symbol}', '${a.condition}', ${a.target_price})" class="edit-alert-btn text-xs border border-blue-200 text-blue-600 hover:bg-blue-50 px-2.5 py-1 rounded transition-colors font-medium">Edit</button>
+                <button onclick="promptDelete('${a.id}')" class="delete-alert-btn text-xs border border-rose-200 text-rose-600 hover:bg-rose-50 px-2.5 py-1 rounded transition-colors font-medium">Delete</button>
               </td>
             </tr>
           `,
@@ -875,21 +929,32 @@
       async function executeDelete() {
         if (!alertIdPendingDelete) return;
         const id = alertIdPendingDelete;
-        closeDeleteModal();
-        await fetch(`/api/v1/alerts/${id}`, {
-          method: "DELETE",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ user_id: userId }),
-        });
-        if (editingAlertId === id) cancelEdit();
-        loadUserAlerts();
-        addLog(`Deleted alert ID ${id.substring(0, 6)}`);
+        const confirmDeleteBtn = document.getElementById("confirm-delete-btn");
+        
+        setButtonLoading(confirmDeleteBtn, "Deleting...");
+        
+        try {
+          await fetch(`/api/v1/alerts/${id}`, {
+            method: "DELETE",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ user_id: userId }),
+          });
+          closeDeleteModal();
+          if (editingAlertId === id) cancelEdit();
+          await loadUserAlerts();
+          addLog(`Deleted alert ID ${id.substring(0, 6)}`);
+        } catch (err) {
+          addLog(`Failed to delete alert ID ${id.substring(0, 6)}`, true);
+        } finally {
+          resetButton(confirmDeleteBtn);
+        }
       }
 
       document
         .getElementById("alert-form")
         .addEventListener("submit", async (e) => {
           e.preventDefault();
+          const submitBtn = document.getElementById("submit-btn");
           const symbol = selectedSymbol;
           const condition = document.getElementById("condition").value;
           const rawTargetValue = document
@@ -903,41 +968,53 @@
           }
 
           if (editingAlertId) {
-            const res = await fetch(`/api/v1/alerts/${editingAlertId}`, {
-              method: "PUT",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({
-                user_id: userId,
-                symbol,
-                condition,
-                target_price,
-              }),
-            });
-            if (res.ok) {
-              addLog(
-                `Updated alert: ${symbol} ${condition} $${rawTargetValue}`,
-              );
-              cancelEdit();
-              loadUserAlerts();
-            }
+            setButtonLoading(submitBtn, "Updating...");
           } else {
-            const res = await fetch("/api/v1/alerts", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({
-                user_id: userId,
-                symbol,
-                condition,
-                target_price,
-              }),
-            });
-            if (res.ok) {
-              addLog(
-                `Created alert: ${symbol} ${condition} $${rawTargetValue}`,
-              );
-              document.getElementById("target").value = "";
-              loadUserAlerts();
+            setButtonLoading(submitBtn, "Saving...");
+          }
+
+          try {
+            if (editingAlertId) {
+              const res = await fetch(`/api/v1/alerts/${editingAlertId}`, {
+                method: "PUT",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  user_id: userId,
+                  symbol,
+                  condition,
+                  target_price,
+                }),
+              });
+              if (res.ok) {
+                addLog(
+                  `Updated alert: ${symbol} ${condition} $${rawTargetValue}`,
+                );
+                cancelEdit();
+                await loadUserAlerts();
+              }
+            } else {
+              const res = await fetch("/api/v1/alerts", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  user_id: userId,
+                  symbol,
+                  condition,
+                  target_price,
+                }),
+              });
+              if (res.ok) {
+                addLog(
+                  `Created alert: ${symbol} ${condition} $${rawTargetValue}`,
+                );
+                document.getElementById("target").value = "";
+                await loadUserAlerts();
+              }
             }
+          } catch (err) {
+            addLog(`Failed to save alert: ${err.message}`, true);
+          } finally {
+            resetButton(submitBtn);
           }
         });
 
