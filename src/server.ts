@@ -12,9 +12,13 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const app = express();
-const PORT = process.env.PORT || 8000;
+const PORT = process.env.PORT ? parseInt(process.env.PORT, 10) : 8000;
 
 app.use(express.json());
+
+app.get('/', (req, res) => {
+  res.status(200).json({ status: 'ok', message: 'Financial Engine API is running' });
+});
 
 // Mount API routes
 app.use('/api/v1', apiRouter);
@@ -110,7 +114,7 @@ setInterval(async () => {
   }
 }, 2000);
 
-server.listen(PORT, () => {
+server.listen(PORT, '0.0.0.0', () => {
   console.log(`⚡ Express API Gateway running on http://localhost:${PORT}`);
   console.log(`🔌 WebSockets server active on ws://localhost:${PORT}`);
   startMarketStream();
