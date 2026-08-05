@@ -100,7 +100,17 @@ export async function getSystemStats() {
 
 const server = createServer(app);
 
+
+
 initWebSocketServer(server);
+
+server.listen(PORT, '0.0.0.0', () => {
+  console.log(`⚡ Express API Gateway running on http://localhost:${PORT}`);
+  console.log(`🔌 WebSockets server active on ws://localhost:${PORT}`);
+  startMarketStream();
+});
+
+
 await initializeDatabase();
 
 
@@ -114,8 +124,3 @@ setInterval(async () => {
   }
 }, 2000);
 
-server.listen(PORT, '0.0.0.0', () => {
-  console.log(`⚡ Express API Gateway running on http://localhost:${PORT}`);
-  console.log(`🔌 WebSockets server active on ws://localhost:${PORT}`);
-  startMarketStream();
-});
