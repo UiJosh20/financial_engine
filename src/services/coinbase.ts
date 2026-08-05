@@ -1,10 +1,9 @@
 import WebSocket from 'ws';
-import { Redis } from 'ioredis';
 import { eventQueue } from '../queue.js';
 import { broadcastToClients } from '../ws.js';
-import { pgPool } from '../config/db.js';
+import { pgPool, redisPool } from '../config/db.js';
 
-const redis = new Redis({ host: process.env.REDIS_HOST || 'localhost', port: Number(process.env.REDIS_PORT) || 6379 });
+const redis = redisPool;
 const BINANCE_WS_URL = 'wss://stream.binance.com:9443/ws';
 
 let ws: WebSocket | null = null;
