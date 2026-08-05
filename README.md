@@ -23,7 +23,7 @@ To install the Price Alert System, follow these steps:
 1. Clone the repository using `git clone`
 2. Install dependencies using `pnpm install`
 3. Create a PostgreSQL database and update the `db.js` file with the connection details
-4. Run the `init.sql` script to create the database schema
+4. Run the `init.sql` script to create the database schema.
 5. Start the application using `pnpm start`
 
 ##  Usage
