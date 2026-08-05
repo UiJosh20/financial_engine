@@ -8,6 +8,7 @@ import apiRouter from './routes/api.js';
 import { startMarketStream } from './services/coinbase.js';
 import { initWebSocketServer, broadcastToClients } from './ws.js';
 
+
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
@@ -75,6 +76,7 @@ export async function getSystemStats() {
   const activeCount = await eventQueue.getActiveCount();
   const completedCount = await eventQueue.getCompletedCount();
   const failedCount = await eventQueue.getFailedCount();
+
 
   let totalDbRows = 0;
   try {
