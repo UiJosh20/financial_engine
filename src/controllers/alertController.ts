@@ -1,12 +1,9 @@
 import { Request, Response, NextFunction } from 'express';
 import { Redis } from 'ioredis';
-import { pgPool } from '../config/db.js';
+import { pgPool, redisPool } from '../config/db.js';
 import { subscribeToSymbol, normalizeSymbol } from '../services/coinbase.js';
 
-const redis = new Redis({
-  host: process.env.REDIS_HOST || 'localhost',
-  port: Number(process.env.REDIS_PORT) || 6379,
-});
+const redis = redisPool;
 
 export async function createAlertHandler(req: Request, res: Response, next: NextFunction) {
   try {
