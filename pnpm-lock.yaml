@@ -23,6 +23,9 @@ importers:
       pg:
         specifier: ^8.22.0
         version: 8.22.0
+      tsx:
+        specifier: ^4.23.1
+        version: 4.23.1
       ws:
         specifier: ^8.21.1
         version: 8.21.1
@@ -45,9 +48,6 @@ importers:
       autocannon:
         specifier: ^8.0.0
         version: 8.0.0
-      tsx:
-        specifier: ^4.23.1
-        version: 4.23.1
       typescript:
         specifier: ^7.0.2
         version: 7.0.2
