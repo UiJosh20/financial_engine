@@ -4,7 +4,8 @@ import { broadcastToClients } from '../ws.js';
 import { pgPool, redisPool } from '../config/db.js';
 
 const redis = redisPool;
-const BINANCE_WS_URL = 'wss://stream.binance.com:9443/ws';
+// const BINANCE_WS_URL = 'wss://stream.binance.com:9443/ws';
+const BINANCE_WS_URL = 'wss://stream.binance.us:9443/ws';
 
 let ws: WebSocket | null = null;
 const activeSymbols = new Set<string>(['btcusdt', 'ethusdt', 'solusdt', 'ltcusdt']);
